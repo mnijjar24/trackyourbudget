@@ -1,78 +1,58 @@
 const FILES_TO_CACHE = [
-    "/",
-    "/index.html",
-    "/styles.css",
-    "/index.js",
-    "/db.js",
-    "/icons/icon-192x192.png",
-    "/icons/icon-512x512.png",
-    "https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
-    "https://cdn.jsdelivr.net/npm/chart.js@2.8.0"
+    "./index.html",
+    "./css/styles.css",
+    //"./icons",
+    "./js/index.js",
+    "./js/idb.js"
 ];
 
-const CACHE_NAME = "static-cache-v1";
-const DATA_CACHE_NAME = "data-cache-v1";
+const APP_PREFIX = 'My-Finance-Budget-Tracker-';
+const VERSION = 'version_01';
+const CACHE_NAME = APP_PREFIX + VERSION;
 
-self.addEventListener("install", (evt) => {
-    evt.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(FILES_TO_CACHE);
+self.addEventListener('install', function(e) {
+    e.waitUntil(
+        caches.open(CACHE_NAME).then(function (cache) {
+            console.log('installing cache : ' + CACHE_NAME)
+            return cache.addAll(FILES_TO_CACHE)
         })
-    );
+    )
+})
 
-    self.skipWaiting();
-});
+self.addEventListener('activate', function(e) {
+    e.waitUntil(
+        caches.keys().then(function (keyList){
+            let cacheKeeplist = keyList.filter(function (key) {
+                return key.indexOf(APP_PREFIX);
+            })
 
-self.addEventListener("activate", (evt) => {
-    //remove old cahce
-    evt.waitUntil(
-        caches.keys().then((keyList) => {
+            cacheKeeplist.push(CACHE_NAME);
+
             return Promise.all(
-                keyList.map((key) => {
-                    if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
-                        return caches.delete(key);
+                keyList.map(function (key, i) {
+                    if (cacheKeeplist.indexOf(key) === -1) {
+                        console.log('deleting cache : ' + keyList[i]);
+                        return caches.delete(keyList[i]);
                     }
                 })
             );
         })
     );
-
-    self.clients.claim();
 });
 
-self.addEventListener("fetch", (evt) => {
-    //cache successful GET requests to the API
-    if (evt.request.url.includes("/api/") && evt.request.method === "GET") {
-        evt.respondWith(
-            caches
-                .open(DATA_CACHE_NAME)
-                .then((cache) => {
-                    return fetch(evt.request)
-                    .then((response) => {
-                        // If response was good, clone and store it in the cache
-                        if (response.status === 200) {
-                            cache.put(evt.request, response.clone());
-                        }
+self.addEventListener('fetch', function (e) {
+    console.log('fetch request : ' + e.request.url)
+    e.respondWith(
+        caches.open(CACHE_NAME)
+            .then(cache => caches.match(e.request).then(function (request) {
+                if (request) {
+                    console.log('responding with cache : ' + e.request.url);
+                    return request
+                } else {
+                    console.log('file is not cached, fetching : ' + e.request.url)
+                    return fetch(e.request)
+                }
+            }))     
 
-                        return response;
-                    })
-                    .catch(() => {
-                        // Network request failed, try to get it from cache
-                        return cache.match(evt.request);
-                    });
-                })
-                .catch((err) => console.log(err))
-        );
-
-        // Stop execution of the fetch event
-        return;
-    }
-
-    // if the request is not for the API, serve static assents using offline-first approach
-
-    evt.respondWith(
-        caches.match(evt.request).then((response) => {
-            return response || fetch(evt.request);
-        })
-    );
-});
+    )
+})
