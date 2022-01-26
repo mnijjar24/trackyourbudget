@@ -60,36 +60,7 @@ function createTransactionForm() {
   return Object.freeze({ transaction, validate, clear, showError });
 }
 
-function createTransactionApi() {
-  const create = (transaction) => {
-    return fetch("/api/transaction", {
-      method: "POST",
-      body: JSON.stringify(transaction),
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json"
-      }
-    }).then((response) => {
-      return response.json();
-    });
-  };
-  
-  const fetchAll = () => {
-    return fetch("/api/transaction").then((response) => {
-      return response.json();
-    });
-  };
-  return Object.freeze({ create, fetchAll });
-}
 
-function initTransactions() {
-  transactionApi.fetchAll().then((data) => {
-    // saves db data on global variable
-    transactions = data;
-
-    renderTransactionsChart();
-  });
-}
 
 function sendTransaction(isAdding) {
   if (!transactionForm.validate()) {
@@ -104,8 +75,6 @@ function sendTransaction(isAdding) {
     transaction.value *= -1;
   }
 
-  //add to beginning of current array
-  transactions.unshift(transaction);
 
   //rerun logic to populate ui with new record
   populateChart();
@@ -133,16 +102,6 @@ function renderTransactionsChart() {
   populateTotal();
   populateTable();
   populateChart();
-}
-
-function populateTotal() {
-  // reduce transaction amounts to a single total value
-  const total = transactions.reduce((total, t) => {
-    return total + parseInt(t.value);
-  }, 0);
-
-  let totalEl = document.querySelector("#total");
-  totalEl.textContent = total;
 }
 
 function populateTable() {
