@@ -12,7 +12,7 @@ The budget tracker application was created so that travellers can be able to tra
 ![3](https://user-images.githubusercontent.com/87215165/150658661-f60fe836-7aee-45cb-a979-69a99fb4e4a2.png)
 
 ## Links
-Deployed Application: https://mnijjar24.github.io/budget-tracker/
+Deployed Application: https://mnijjar24.github.io/trackyourbudget/
 Github Repo: https://github.com/mnijjar24/trackyourbudget
 Heroku: https://trackyourbudgettoday.herokuapp.com/
 Link to Walkthrough Video: https://youtu.be/E3MEISocQb4 
